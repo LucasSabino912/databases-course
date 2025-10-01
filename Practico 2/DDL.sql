@@ -61,6 +61,10 @@ INSERT INTO continent (Name, Area, MasaTerrestre, MostPopulousCity) VALUES
 alter table country
 modify Continent varchar(255);
 
+-- Si no no puedo ponerle valor 100.0 a 'AIA'
+alter table countrylanguage
+modify percentage decimal(4,1);
+
 alter table country
 add constraint fk_country_continent
 foreign key (Continent) references Continent(Name);
