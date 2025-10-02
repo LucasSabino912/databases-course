@@ -61,15 +61,55 @@ where co.SurfaceArea < 1000 and exists (
 
 
 -- Listar el nombre de cada país con la cantidad de habitantes de su ciudad más poblada. (Hint: Hay dos maneras de llegar al mismo resultado. Usando consultas escalares o usando agrupaciones, encontrar ambas).
+select 
+	co.Name,
+	(
+		select max(ci.population)
+		from city ci
+		where co.Code = ci.CountryCode
+	) as MaxCityPopulation
+from country co;
+
+select
+	co.Name as CountryName,
+	max(ci.Population) as MaxCityPopulation
+from country co
+left join city ci on co.Code = ci.CountryCode
+group by co.Name;
 
 
 -- Listar aquellos países y sus lenguajes no oficiales cuyo porcentaje de hablantes sea mayor al promedio de hablantes de los lenguajes oficiales.
+select
+	co.Name,
+	cl.language
+from country co
+inner join countrylanguage cl on cl.CountryCode = co.Code
+where cl.IsOfficial = 'F' and cl.Percentage > (
+	select avg(Percentage)
+	from countrylanguage
+	where IsOfficial = 'T'
+);
 
 
 -- Listar la cantidad de habitantes por continente ordenado en forma descendente.
+select Continent, sum(Population) as TotalPopulation
+from country
+group by continent
+order by desc;
 
 
 -- Listar el promedio de esperanza de vida (LifeExpectancy) por continente con una esperanza de vida entre 40 y 70 años.
-
+select avg(LifeExpectancy) as AvgLifeExpectancy, Continent
+from country
+group by Continent
+having Avg(LifeExpectancy) between 40 and 70;
+	
 
 -- Listar la cantidad máxima, mínima, promedio y suma de habitantes por continente.
+select 
+	max(Population) as MaxPopulation,
+	min(Population) as MinPopulation,
+	sum(Population) as TotalPopulation,
+	avg(Population) as AvgPopulation
+from country
+group by continent;
