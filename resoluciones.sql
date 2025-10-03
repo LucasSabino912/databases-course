@@ -1,4 +1,7 @@
--- Listar los 5 clientes que más ingresos han generado a lo largo del tiempo.
+-- Lucas Nahuel Sabino
+-- 44553764
+
+-- 1
 SELECT 
     c.*,
     SUM((od.`UnitPrice` * od.`Quantity`) - od.`Discount`) AS `TotalGastado`
@@ -9,7 +12,7 @@ GROUP BY c.`CustomerID`
 ORDER BY TotalGastado DESC
 LIMIT 5;
 
--- Listar cada producto con sus ventas totales, agrupados por categoría.
+-- 2
 SELECT
     p.`ProductName` AS name, 
     SUM((od.`UnitPrice` * od.`Quantity`) - od.`Discount`) AS `VentasTotales`, 
@@ -19,8 +22,7 @@ INNER JOIN `order details` od ON p.`ProductID` = od.`ProductID`
 GROUP BY `name`, `category` 
 ORDER BY `category`, `VentasTotales` DESC; 
 
--- Calcular el total de ventas para cada categoría (dinero).
-
+-- 3
 SELECT 
     SUM((od.`UnitPrice` * od.`Quantity`) - od.`Discount`) AS `VentasTotales`, 
     p.`CategoryID` AS `category`
@@ -29,8 +31,7 @@ INNER JOIN `order details` od ON p.`ProductID` = od.`ProductID`
 GROUP BY `category` 
 ORDER BY `VentasTotales` DESC; 
 
--- Crear una vista que liste los empleados con más ventas por cada año, mostrando
--- empleado, año y total de ventas. Ordenar el resultado por año ascendente.
+-- 4
 CREATE OR REPLACE VIEW employee_sales_per_year AS
 SELECT 
     e.`EmployeeID`, 
@@ -43,12 +44,7 @@ INNER JOIN `order details` od  ON o.`OrderID` = od.`OrderID`
 GROUP BY e.`EmployeeID`, `Year`
 ORDER BY `Year`, `Ventas` ASC;
 
-
-
--- Crear un trigger que se ejecute después de insertar un nuevo registro en la tabla
--- Order Details. Este trigger debe actualizar la tabla Products para disminuir la
--- cantidad en stock (UnitsInStock) del producto correspondiente, restando la
--- cantidad (Quantity) que se acaba de insertar en el detalle del pedido.
+-- 5
 DELIMITER $$
 
 CREATE TRIGGER after_orderdetails_insert
@@ -67,14 +63,7 @@ END$$
 
 DELIMITER ;
 
-
-
-
-
--- Crear un rol llamado admin y otorgarle los siguientes permisos:
--- ● crear registros en la tabla Customers.
--- ● actualizar solamente la columna Phone de Customers.
-
+-- 6
 CREATE ROLE 'Admin';
 GRANT CREATE ON `northwind`.`customers` TO 'Admin';
 GRANT UPDATE (`Phone`) ON `customers` TO `Admin`;
