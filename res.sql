@@ -52,6 +52,4 @@ ORDER BY `VentasTotales` DESC;
 
 CREATE ROLE 'Admin';
 GRANT CREATE ON `northwind`.`customers` TO 'Admin';
-
--- actualizar solamente la columna Phone de Customers.
-GRANT UPDATE ON `nortwind`.`customers`.`Phone`;
+GRANT UPDATE (`Phone`) ON `customers` TO `Admin`;
