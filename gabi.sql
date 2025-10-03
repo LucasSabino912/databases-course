@@ -33,38 +33,38 @@ ORDER BY `ventas totales` desc;
 
 -- employees -> orders -> order details
 
-CREATE OR REPLACE VIEW employee_yearly_most_sells AS
-WITH YearlySales AS (
+CREATE OR REPLACE VIEW mejor_empleado_anual AS
+WITH VentasAnuales AS (
     SELECT
         e.EmployeeID,
         e.LastName,
         e.FirstName,
-        SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS AnnualSales,
-        YEAR(o.OrderDate) AS SaleYear
+        SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS `annualsales`,
+        YEAR(o.OrderDate) AS `year`
     FROM employees e
     JOIN orders o ON e.EmployeeID = o.EmployeeID
     JOIN `order details` od ON o.OrderID = od.OrderID
-    GROUP BY e.EmployeeID, e.LastName, e.FirstName, SaleYear
+    GROUP BY e.EmployeeID, e.LastName, e.FirstName, `year`
 ),
-RankedSales AS (
+VentasRankeadas AS (
     SELECT
         EmployeeID,
         LastName,
         FirstName,
-        AnnualSales,
-        SaleYear,
-        RANK() OVER (PARTITION BY SaleYear ORDER BY AnnualSales DESC) as SalesRank
-    FROM YearlySales
+        `annualsales`,
+        `year`,
+        RANK() OVER (PARTITION BY `year` ORDER BY `annualsales` DESC) as `ranking ventas`
+    FROM VentasAnuales
 )
 SELECT
     EmployeeID,
     LastName,
     FirstName,
-    AnnualSales,
-    SaleYear
-FROM RankedSales
-WHERE SalesRank = 1
-ORDER BY SaleYear ASC;
+    `annualsales`,
+    `year`
+FROM VentasRankeadas
+WHERE `ranking ventas` = 1
+ORDER BY `year` ASC;
 
 -- 5. Crear un trigger que se ejecute después de insertar un nuevo registro en la tabla
 -- Order Details. Este trigger debe actualizar la tabla Products para disminuir la
@@ -92,6 +92,6 @@ delimiter ;
 --  crear registros en la tabla Customers.
 --  actualizar solamente la columna Phone de Customers.
 
-CREATE ROLE 'Admin';
-GRANT CREATE ON northwind.customers TO 'Admin';
-GRANT UPDATE (Phone) ON customers TO 'Admin';
+CREATE ROLE 'admin';
+GRANT CREATE ON northwind.customers TO 'admin';
+GRANT UPDATE (Phone) ON customers TO 'admin';
