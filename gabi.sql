@@ -32,14 +32,39 @@ ORDER BY `ventas totales` desc;
 -- empleado, año y total de ventas. Ordenar el resultado por año ascendente.
 
 -- employees -> orders -> order details
-SELECT e.EmployeeID, e.LastName, e.FirstName , SUM(od.Quantity * od.UnitPrice - od.Discount ) AS ventas, YEAR(o.OrderDate) as year
-FROM employees e 
-INNER JOIN orders o ON e.EmployeeID = o.EmployeeID
-INNER JOIN `order details` od  ON o.OrderID = od.OrderID
-GROUP BY e.EmployeeID, year
-ORDER BY year, ventas DESC;
 
-
+CREATE OR REPLACE VIEW employee_yearly_most_sells AS
+WITH YearlySales AS (
+    SELECT
+        e.EmployeeID,
+        e.LastName,
+        e.FirstName,
+        SUM(od.Quantity * od.UnitPrice * (1 - od.Discount)) AS AnnualSales,
+        YEAR(o.OrderDate) AS SaleYear
+    FROM employees e
+    JOIN orders o ON e.EmployeeID = o.EmployeeID
+    JOIN `order details` od ON o.OrderID = od.OrderID
+    GROUP BY e.EmployeeID, e.LastName, e.FirstName, SaleYear
+),
+RankedSales AS (
+    SELECT
+        EmployeeID,
+        LastName,
+        FirstName,
+        AnnualSales,
+        SaleYear,
+        RANK() OVER (PARTITION BY SaleYear ORDER BY AnnualSales DESC) as SalesRank
+    FROM YearlySales
+)
+SELECT
+    EmployeeID,
+    LastName,
+    FirstName,
+    AnnualSales,
+    SaleYear
+FROM RankedSales
+WHERE SalesRank = 1
+ORDER BY SaleYear ASC;
 
 -- 5. Crear un trigger que se ejecute después de insertar un nuevo registro en la tabla
 -- Order Details. Este trigger debe actualizar la tabla Products para disminuir la
@@ -61,9 +86,12 @@ BEGIN
 	UPDATE products SET UnitsInStock = UnitsInStock - new.Quantity;
 END$$
 
-
 delimiter ;
 
 -- 6. Crear un rol llamado admin y otorgarle los siguientes permisos:
 --  crear registros en la tabla Customers.
 --  actualizar solamente la columna Phone de Customers.
+
+CREATE ROLE 'Admin';
+GRANT CREATE ON northwind.customers TO 'Admin';
+GRANT UPDATE (Phone) ON customers TO 'Admin';
