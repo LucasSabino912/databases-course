@@ -1,5 +1,3 @@
-use("sample_airbnb");
-
 /**
  * 1. 
  * Calcular el rating promedio por país. 
@@ -8,6 +6,7 @@ use("sample_airbnb");
  * Usar el campo “review_scores.review_scores_rating” para calcular el rating promedio.
  */
 
+use("sample_airbnb");
 db.listingsAndReviews.aggregate([
   {
     $group: {
@@ -15,14 +14,14 @@ db.listingsAndReviews.aggregate([
       average_rating: {
         $avg: "$review_scores.review_scores_rating"
       },
-      count: {$count: {}} //  cantidad de rating
+      counts: {$count: {}} //  cantidad de rating
     }
   },
   {
     $project: {
       country: "$_id",
-      average_rating:1,
-      count:1,
+      average_rating: "$average_rating",
+      count:"$counts",
       _id:0
     }
   },
@@ -73,6 +72,27 @@ db.listingsAndReviews.aggregate([
  */ 
 
 use("sample_airbnb");
+db.createView(
+  "top10_most_common_amenities",
+  "listingsAndReviews",
+  [
+    {$unwind: "$amenities"},
+    {
+      $group: {
+        _id: "$amenities",
+        counts: {$count: {}}
+      }
+    },
+    {
+      $project: {
+        name: "$_id",
+        count: "$counts",
+        _id:0
+      }
+    }
+  ]
+);
+db.top10_most_common_amenities.find();
 
 
 /** 
