@@ -867,9 +867,3 @@ db.userProfiles.insertMany([
   { user_id: ObjectId(), language: "English", favorite_genres: ["A", "A"] }, // Duplicados
   { user_id: ObjectId(), language: 123 } // language no es string
 ]);
-
-
-/* Modelado de datos en MongoDB
-6. Identificar los distintos tipos de relaciones (One-To-One, One-To-Many) en las
-colecciones movies y comments. Determinar si se usó documentos anidados o
-referencias en cada relación y justificar la razón. */
