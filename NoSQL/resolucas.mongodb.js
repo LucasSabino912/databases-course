@@ -87,29 +87,29 @@ HINTS: (i) para actualizar se puede usar pipeline de agregación. (ii) El operad
 $cond o $switch pueden ser de utilidad */
 
 db.listingsAndReviews.updateMany(
-   {
-      "address.country": "Brazil",
-      "review_scores.review_scores_rating": { $exists: true, $ne: null }
-   },
-   [
-      {
-         $set: {
-            "quality_label": {
-               $switch: {
-                  branches: [
-                     {
-                        case: { $gte: ["$review_scores.review_scores_rating", 90] },
-                        then: "High"
-                     },
-                     {
-                        case: { $gte: ["$review_scores.review_scores_rating", 70] },
-                        then: "Medium"
-                     }
-                  ],
-                  default: "Low"
-               }
-            }
-         }
+  {
+    "address.country": "Brazil",
+    "review_scores.review_scores_rating": { $exists: true, $ne: null }
+  },
+  [
+    {
+      $set: {
+        "quality_label": {
+          $switch: {
+            branches: [
+              {
+                case: { $gte: ["$review_scores.review_scores_rating", 90] },
+                then: "High"
+              },
+              {
+                case: { $gte: ["$review_scores.review_scores_rating", 70] },
+                then: "Medium"
+              }
+            ],
+            default: "Low"
+          }
+        }
       }
-   ]
+    }
+  ]
 )
