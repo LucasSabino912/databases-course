@@ -50,3 +50,25 @@ db.listingsAndReviews.aggregate([
 ]);
 
 /* Ejercicio 3 */
+
+db.createView(
+  "top10_most_common_amenities",
+  "listingAndReviews",
+  [
+    { $unwind: "$amenities "},
+
+    {
+      $group: {
+        _id: "$amenities",
+        total_app: { $count: {} }
+      }
+    },
+    {
+      $project: {
+        name: "$_id",
+        count: "$total_app",
+        _id: 0
+      }
+    }
+  ]
+);
