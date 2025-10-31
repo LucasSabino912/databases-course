@@ -39,8 +39,10 @@ db.listingsAndReviews.aggregate([
  * Listar en orden descendente por cantidad de reviews.
  * HINT: $first pueden ser de utilidad.
  */
-use("sample_airbnb");
 
+
+// este está mal
+use("sample_airbnb");
 db.listingsAndReviews.aggregate([
   {
     $match: {
@@ -107,7 +109,34 @@ db.top10_most_common_amenities.find();
  * (ii) El operador $cond o $switch pueden ser de utilidad.
  */
 
-use("sample_airbnb");
+use("sample_airbnb"); //  rehagan el 2 que está mal
+db.listingsAndReviews.updateMany(
+  {
+    "review_scores.review_scores_rating":{$ne: null, $exists: true },
+    "address.country": {$eq: "Brazil"}
+  },
+  [
+    {
+      $set:{
+        "quality_label":{
+          $switch: {
+            branches: [
+              { 
+                case: {$gte: [90, "review_scores.review_scores_rating"]}, 
+                then: "High"
+              },
+              { 
+                case: {$and:[{$gte: [70, "review_scores.review_scores_rating"]},{$lt: [90, "review_scores.review_scores_rating"]}]}, 
+                then: "Medium"
+              }
+            ],
+            default: "Low"
+          }
+        }
+      }
+    }
+  ]
+)
 
 /** 
  * 5. 
