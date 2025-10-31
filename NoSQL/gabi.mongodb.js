@@ -40,8 +40,6 @@ db.listingsAndReviews.aggregate([
  * HINT: $first pueden ser de utilidad.
  */
 
-
-// este está mal
 use("sample_airbnb");
 db.listingsAndReviews.aggregate([
   {
@@ -109,7 +107,7 @@ db.top10_most_common_amenities.find();
  * (ii) El operador $cond o $switch pueden ser de utilidad.
  */
 
-use("sample_airbnb"); //  rehagan el 2 que está mal
+use("sample_airbnb");
 db.listingsAndReviews.updateMany(
   {
     "review_scores.review_scores_rating":{$ne: null, $exists: true },
@@ -122,11 +120,16 @@ db.listingsAndReviews.updateMany(
           $switch: {
             branches: [
               { 
-                case: {$gte: [90, "review_scores.review_scores_rating"]}, 
+                case: {$lte: [90, "review_scores.review_scores_rating"]}, 
                 then: "High"
               },
               { 
-                case: {$and:[{$gte: [70, "review_scores.review_scores_rating"]},{$lt: [90, "review_scores.review_scores_rating"]}]}, 
+                case: {
+                  $and: [
+                    {$lte: [70, "review_scores.review_scores_rating"]},
+                    {$gt: [90, "review_scores.review_scores_rating"]}
+                  ]
+                }, 
                 then: "Medium"
               }
             ],
@@ -141,10 +144,11 @@ db.listingsAndReviews.updateMany(
 /** 
  * 5. 
  * (a) Especificar reglas de validación en la colección listingsAndReviews a los
- * siguientes campos requeridos: name, address, amenities, review_scores, and
- * reviews ( y todos sus campos anidados). Inferir los tipos y otras restricciones que
- * considere adecuados para especificar las reglas a partir de los documentos de la
- * colección.
+ * siguientes campos requeridos: 
+ * name, address, amenities, review_scores, and reviews ( y todos sus campos anidados). 
+ * Inferir los tipos y otras restricciones que considere adecuados 
+ * para especificar las reglas a partir de los documentos de la colección.
+ * 
  * (b) Testear la regla de validación generando dos casos de fallas en la regla de
  * validación y un caso de éxito en la regla de validación. Aclarar en la entrega cuales
  * son los casos y por qué fallan y cuales cumplen la regla de validación. Los casos no
@@ -153,3 +157,108 @@ db.listingsAndReviews.updateMany(
  */
 
 use("sample_airbnb");
+db.runCommand({collMod: "listingsAndReviews",
+  validator: {
+    $jsonSchema: {
+      "bsonType": "object",
+      "required": ["name", "address", "amenities", "review_scores", "reviews"],
+      "properties": {
+        "name": { "bsonType": "string" },
+        "adress": { "bsonType": "object",
+          "required": ["country", "country_code", "government_area"],
+          "properties": {
+            "country": { "bsonType": "string" },
+            "country_code": { "bsonType": "string" },
+            "government_area":{ "bsonType": "string" }
+          }
+        },
+        "amenities": {"bsonType": "array"},
+        "review_scores":{"bsonType": "object",
+          "required": [
+            "review_scores_accuracy", 
+            "review_scores_checkin", 
+            "review_scores_cleanliness",
+            "review_scores_communication",
+            "review_scores_location",
+            "review_scores_rating",
+            "review_scores_value"
+          ],
+          "properties": {
+            "review_scores_accuracy": { "bsonType": "int" },
+            "review_scores_checkin": { "bsonType": "int" },
+            "review_scores_cleanliness":{ "bsonType": "int" },
+            "review_scores_communication":{ "bsonType": "int" },
+            "review_scores_location":{ "bsonType": "int" },
+            "review_scores_rating":{ "bsonType": "int" },
+            "review_scores_value":{ "bsonType": "int" }
+          }
+        },
+        "reviews":{ "bsonType": "array" }
+      }
+    }
+  }
+})
+
+//  válido
+db.listingsAndReviews.insertOne({
+  name: "valid",
+  address: {
+    country: "Argentina",
+    country_code: "wawa",
+    government_area: "si"
+  },
+  amenities: ["TV"],
+  review_scores: {
+    "review_scores_accuracy": 1,
+    "review_scores_checkin": 1,
+    "review_scores_cleanliness": 1,
+    "review_scores_communication": 1,
+    "review_scores_location": 1,
+    "review_scores_rating": 1,
+    "review_scores_value":1
+  },
+  reviews: [ {_id:"miau"} ]
+});
+
+
+//  invalido name no es string
+db.listingsAndReviews.insertOne({
+  name: false,
+  address: {
+    country: "Argentina",
+    country_code: "wawa",
+    government_area: "si"
+  },
+  amenities: ["TV"],
+  review_scores: {
+    "review_scores_accuracy": 1,
+    "review_scores_checkin": 1,
+    "review_scores_cleanliness": 1,
+    "review_scores_communication": 1,
+    "review_scores_location": 1,
+    "review_scores_rating": 1,
+    "review_scores_value":1
+  },
+  reviews: [ {_id:"miau"} ]
+});
+
+//  inválido review_scores_accuracy string
+db.listingsAndReviews.insertOne({
+  name: "invalid",
+  address: {
+    country: "Argentina",
+    country_code: "wawa",
+    government_area: "si"
+  },
+  amenities: ["TV"],
+  review_scores: {
+    "review_scores_accuracy": "spñ",
+    "review_scores_checkin": 1,
+    "review_scores_cleanliness": 1,
+    "review_scores_communication": 1,
+    "review_scores_location": 1,
+    "review_scores_rating": 1,
+    "review_scores_value":1
+  },
+  reviews: [ {_id:"miau"} ]
+});
