@@ -34,27 +34,60 @@ db.listingsAndReviews.aggregate([
 ]);
 
 /** 
- * 2. Listar los 20 alojamientos que tienen las reviews más recientes. Listar el id, nombre,
- * fecha de la última review, y cantidad de reviews del alojamiento. Listar en orden
- * descendente por cantidad de reviews.
+ * 2. 
+ * Listar los 20 alojamientos que tienen las reviews más recientes. 
+ * Listar el id, nombre, fecha de la última review, y cantidad de reviews del alojamiento. 
+ * Listar en orden descendente por cantidad de reviews.
  * HINT: $first pueden ser de utilidad.
  */
+use("sample_airbnb");
+
+db.listingsAndReviews.aggregate([
+  {
+    $match: {
+      "last_review":{$ne: null, $exists: true }
+    }
+  },
+  {
+    $sort: {"last_review": -1}
+  },
+  {
+    $limit: 20
+  },
+  {
+    $project: {
+      name: 1,
+      last_review: 1,
+      number_of_reviews:1
+    }
+  },
+  {
+    $sort: {number_of_reviews: -1}
+  }
+]);
 
 /** 
  * 3. Crear la vista “top10_most_common_amenities” con información de los 10 amenities
- * que aparecen con más frecuencia. El resultado debe mostrar el amenity y la
- * cantidad de veces que aparece cada amenity.
+ * que aparecen con más frecuencia. 
+ * El resultado debe mostrar el amenity y la cantidad de veces que aparece cada amenity.
  */ 
- /** 
-  * 4. Actualizar los alojamientos de Brazil que tengan un rating global
-  * (“review_scores.review_scores_rating”) asignado, agregando el campo
-  * "quality_label" que clasifique el alojamiento como “High” (si el rating global es mayor
-  * o igual a 90), “Medium” (si el rating global es mayor o igual a 70), “Low” (valor por
-  * defecto) calidad..
-  * HINTS: 
-  * (i) para actualizar se puede usar pipeline de agregación. 
-  * (ii) El operador $cond o $switch pueden ser de utilidad.
-  */
+
+use("sample_airbnb");
+
+
+/** 
+ * 4. Actualizar los alojamientos de Brazil que tengan un rating global
+ * (“review_scores.review_scores_rating”) asignado, agregando el campo
+ * "quality_label" que clasifique el alojamiento como:
+ * “High” (si el rating global es mayor o igual a 90), 
+ * “Medium” (si el rating global es mayor o igual a 70), 
+ * “Low” (valor por defecto) calidad..
+ * HINTS: 
+ * (i) para actualizar se puede usar pipeline de agregación. 
+ * (ii) El operador $cond o $switch pueden ser de utilidad.
+ */
+
+use("sample_airbnb");
 
 /** 
  * 5. 
@@ -69,3 +102,5 @@ db.listingsAndReviews.aggregate([
  * deben ser triviales, es decir los ejemplos deben contener todos los campos
  * especificados en la regla.
  */
+
+use("sample_airbnb");
