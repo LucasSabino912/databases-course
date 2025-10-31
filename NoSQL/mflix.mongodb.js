@@ -8,22 +8,16 @@ db.users.insertMany([
     name: "Lucas Sabino",
     email: "lucas@example.com",
     password: "1234",
-    dateOfBirth: new Date("1990-05-15"),
-    createdAt: new Date()
   },
   {
     name: "Ana Pérez",
     email: "ana@example.com",
     password: "abcd",
-    dateOfBirth: new Date("1995-09-20"),
-    createdAt: new Date()
   },
   {
     name: "Carlos Gómez",
     email: "carlos@example.com",
     password: "pass123",
-    dateOfBirth: new Date("1988-01-30"),
-    createdAt: new Date()
   },
   {
     name: "María López",
@@ -36,8 +30,6 @@ db.users.insertMany([
     name: "Julián Torres",
     email: "julian@example.com",
     password: "torres99",
-    dateOfBirth: new Date("1998-07-11"),
-    createdAt: new Date()
   }
 ])
 
@@ -53,16 +45,32 @@ let newUsers = db.users.find({
 }).toArray()
 
 // Inserto comentarios a cada usuario
-newUsers.forEach(user => {
-  db.comments.insertOne({
-    name: user.name,
-    email: user.email,
-    user_id: user._id,
-    movie_id: ObjectId(),
+db.comments.insertMany([
+  {
+    name: "Lucas Sabino",
+    email: "lucas@example.com",
+    user_id: ObjectId("64f1a2c123456789abcdef01"), // Tiene que ser el ID exacto
+    movie_id: ObjectId("573a1399f29313caabcee888"),
     text: "¡Este es mi primer comentario!",
     date: new Date()
-  })
-})
+  },
+  {
+    name: "Ana Pérez",
+    email: "ana@example.com",
+    user_id: ObjectId("64f1a2c123456789abcdef02"),
+    movie_id: ObjectId("573a1399f29313caabcee889"),
+    text: "¡Este es mi primer comentario!",
+    date: new Date()
+  },
+  {
+    name: "Juan Gómez",
+    email: "juan@example.com",
+    user_id: ObjectId("64f1a2c123456789abcdef03"),
+    movie_id: ObjectId("573a1399f29313caabcee887"),
+    text: "¡Este es mi primer comentario!",
+    date: new Date()
+  }
+])
 
 
 // Ejercicio 2
@@ -81,7 +89,7 @@ db.movies.find(
     year: 1,
     cast: 1,
     directors: 1,
-    "imdb.rating": 1,
+    rating: "$imdb.rating",
     _id: 0
   }
 )
@@ -93,6 +101,10 @@ db.movies.find(
 /* Listar el nombre, email, texto y fecha de los comentarios que la película con id (movie_id) 
 ObjectId("573a1399f29313caabcee886") recibió entre los años 2014 y 2016 inclusive. Listar ordenados por fecha. 
 Escribir una nueva consulta (modificando la anterior) para responder ¿Cuántos comentarios recibió? */
+
+use("mflix")
+db.comments.aggregate({$match: {movie_id: ObjectId("573a1399f29313caabcee886")}}, 
+{$match: {date: {$gte: ISODate("2014-01-01T00:00:00Z"), $lte: ISODate("2016-12-31T23:59:59Z")}}})
 
 db.comments.find(
   {
@@ -116,9 +128,9 @@ db.comments.find(
 /* Listar el nombre, id de la película, texto y fecha de los 3 comentarios más recientes realizados 
 por el usuario con email patricia_good@fakegmail.com */
 
+use("mflix")
 db.comments.find(
   { email: "patricia_good@fakegmail.com" },
-  { name: 1, movie_id: 1, text: 1, date: 1, _id: 0 }
 )
 .sort({ date: -1 })
 .limit(3)
@@ -134,23 +146,54 @@ una duración (runtime) de al menos 180 minutos. Listar ordenados por fecha de l
 db.movies.findOne() // Busco algun documento para saber la estructura
 
 db.movies.find(
-  {
-    genres: { $all: ["Drama", "Action"] },
-    languages: { $size: 1 },
-    $or: [
-      { "imdb.rating": { $gt: 9 } },
-      { runtime: { $gte: 180 } }
-    ]
-  },
-  {
-    title: 1,
-    languages: 1,
-    genres: 1,
-    released: 1,
-    "imdb.votes": 1,
-    _id: 0
-  }
-).sort({ released: 1, "imdb.votes": -1 })
+    // PRIMER ARGUMENTO: El criterio de búsqueda (QUERY)
+    {
+        // 1. CONDICIÓN PRINCIPAL (AND implícito):
+        // Busca documentos (películas) donde el array 'genres' (géneros)
+        // contenga *todos* los elementos especificados: "Drama" Y "Action".
+        // Ambas deben estar presentes.
+        genres: { $all: ["Drama", "Action"] },
+
+        // 2. CONDICIÓN PRINCIPAL (AND implícito):
+        // Busca documentos donde el array 'countries' (países de producción)
+        // tenga exactamente 1 elemento (es decir, una producción de un solo país).
+        countries: { $size: 1 },
+
+        // 3. CONDICIÓN PRINCIPAL (OR explícito):
+        // La película debe cumplir *al menos una* de las condiciones dentro de este array.
+        $or: [
+            // Opción A del OR: El campo 'imdb.rating' (calificación de IMDb)
+            // debe ser Estrictamente Mayor Que 9.
+            { "imdb.rating": { $gt: 9 } },
+
+            // Opción B del OR: El campo 'runtime' (duración en minutos)
+            // debe ser Mayor o Igual Que 180 (3 horas o más).
+            { runtime: { $gte: 180 } }
+        ]
+    },
+
+    // SEGUNDO ARGUMENTO: Proyección (FIELDS)
+    {
+        // 1. Incluir el campo 'title' (título). El valor '1' indica inclusión.
+        title: 1,
+
+        // 2. Incluir el campo 'country'.
+        country: 1,
+
+        // 3. Incluir el campo 'genres'.
+        genres: 1,
+
+        // 4. Incluir el campo 'imdb.votes' (votos en IMDb).
+        "imdb.votes": 1,
+
+        // Nota: El campo '_id' se incluye por defecto, a menos que se especifique '_id: 0'.
+    }
+)
+// TERCER PASO (Método de cursor): Ordenamiento (SORT)
+// Ordena los resultados primero por la fecha de estreno ('released') de forma ascendente (1).
+// Para películas estrenadas el mismo día, ordena por el número de votos en IMDb ('imdb.votes')
+// de forma descendente (-1, es decir, del mayor número de votos al menor).
+.sort( {released: 1, "imdb.votes": -1 })
 
 // Ejercicio 6
 
@@ -161,27 +204,22 @@ Listar ordenados por estado y ciudad. */
 
 db.theaters.find(
   {
-    // Filtra teatros que estén en alguno de estos estados
-    "location.address.state": { $in: ["CA", "NY", "TX"] },
-
-    // Filtra ciudades cuyo nombre empieza con 'F' (case-insensitive)
-    "location.address.city": { $regex: /^F/, $options: "i" }
+    "location.address.state": { $in: ["CA", "NY", "TX"]}, // Filtra teatros que estén en alguno de estos estados
+    "location.address.city": /^F/i // Filtra ciudades que empiecen con la letra F (case sensitive)
   },
   {
-    // Campos que queremos mostrar en el resultado
-    theaterId: 1,                    // ID del teatro
-    "location.address.state": 1,     // Estado
-    "location.address.city": 1,      // Ciudad
-    "location.geo.coordinates": 1,   // Coordenadas geográficas [longitud, latitud]
-    _id: 0                           // Oculta el _id que Mongo agrega por defecto
+    theaterId: 1,
+    "location.address.state": 1,
+    "location.address.city": 1,
+    "location.geo.coordinates": 1
   }
-)
-.sort(
+).sort(
   {
-    "location.address.state": 1, // Orden ascendente por estado
+    "location.address.state": 1,  // Orden ascendente por estado
     "location.address.city": 1   // Orden ascendente por ciudad dentro de cada estado
   }
 )
+
 
 // Ejercicio 7
 
@@ -193,7 +231,7 @@ db.comments.updateOne(
   {
     $set: {
       text: "mi mejor comentario",  // Nuevo texto
-      date: new Date()              // Fecha actual
+      date: "$NOW"  // Fecha actual
     }
   }
 )
@@ -211,9 +249,8 @@ La misma consulta debe poder insertar un nuevo usuario en caso que el usuario no
 Ejecute la consulta dos veces. ¿Qué operación se realiza en cada caso?  (Hint: usar upserts). */
 
 db.users.updateOne(
-  { email: "joel.macdonel@fakegmail.com" }, // Filtro por email
-  {
+  { email: "joel.macdonel@fakegmail.com" },{
     $set: { password: "some password" }     // Actualizamos la contraseña
   },
-  { upsert: true }                          // Si no existe, crea un nuevo documento
+  { upsert: true } // Si no existe, crea un nuevo documento
 )
