@@ -4,7 +4,7 @@ colecciones movies y comments. Determinar si se usó documentos anidados o
 referencias en cada relación y justificar la razón. */
 
 
-/* Coleccion categories
+//Coleccion categories
 {
   _id: ObjectId(),
   category_name: "Fiction"
@@ -44,7 +44,6 @@ referencias en cada relación y justificar la razón. */
     }
   ]
 }
-*/
 
 // Listar id, título y precio de los libros y sus categorías de un autor en particular
 db.books.aggregate([
