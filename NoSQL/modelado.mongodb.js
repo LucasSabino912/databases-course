@@ -174,3 +174,45 @@ db.runCommand({
     }
   }
 });
+
+// Ejercicio 8:
+
+// users
+{
+    _id: ObjectId("u1"),
+    name: "Lucas Sabino",
+    email: "lucas@example.com"
+  }
+  
+  // categories
+  {
+    _id: ObjectId("c1"),
+    name: "Technology"
+  }
+  
+  // tags
+  {
+    _id: ObjectId("t1"),
+    name: "MongoDB"
+  }
+  
+  // articles
+  {
+    _id: ObjectId("a1"),
+    user_id: ObjectId("u1"),
+    title: "Intro to MongoDB",
+    date: ISODate("2025-10-31"),
+    text: "MongoDB is a NoSQL database...",
+    url: "https://example.com/mongo",
+    categories: [ObjectId("c1")],
+    tags: [ObjectId("t1")]
+  }
+  
+  // comments
+  {
+    _id: ObjectId("cm1"),
+    article_id: ObjectId("a1"),
+    user_id: ObjectId("u1"),
+    date: ISODate("2025-10-31"),
+    text: "Great article!"
+  }
